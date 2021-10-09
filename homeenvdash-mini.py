@@ -2,21 +2,17 @@
 import datetime
 import time
 from pathlib import Path
-from uuid import NAMESPACE_URL
-
 import board
 import digitalio
 import pandas
 import plotly.express as px
 from adafruit_bme280 import basic as adafruit_bme280
-# from dash.dependencies import Input, Output
-# from dash import Dash, callback, html, dcc, dash_table, Input, Output, State, MATCH, ALL
 from dash import Dash, callback, html, dcc, Input, Output
-# import dash_bootstrap_components as dbc
 
 # 保存するCSVファイル名
-
 SENSOR_VALUES_FILE = Path("./sensor_values.csv")
+
+UPDATE_MINITS = 1
 
 # dashアプリの初期化
 app = Dash(
@@ -24,7 +20,7 @@ app = Dash(
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
 )
 app.title = "homeenvdash-mini"
-app.config.suppress_callback_exceptions = True
+# app.config.suppress_callback_exceptions = True
 
 spi = board.SPI()
 bme_cs = digitalio.DigitalInOut(board.D5)
@@ -32,6 +28,7 @@ bme280 = adafruit_bme280.Adafruit_BME280_SPI(spi, bme_cs)
 
 # change this to match the location's pressure (hPa) at sea level
 bme280.sea_level_pressure = 1013.25
+
 
 def get_sensor_values():
     """センサーの値を取得する。記録は文字列にする"""
@@ -41,10 +38,13 @@ def get_sensor_values():
 
     return (temperature, relative_humidity, pressure)
 
-def save_sensor_values(sensor_values: tuple, recode_datetime: datetime.datetime, max_row: int = 2000):
+
+def save_sensor_values(
+    sensor_values: tuple, recode_datetime: datetime.datetime, max_row: int = 2000
+):
     """
-        センサーの値をCSVへ保存する
-        CSVの行数はデフォルト2000行で増やしつつ、過去の行は捨てていく
+    センサーの値をCSVへ保存する
+    CSVの行数はデフォルト2000行で増やしつつ、過去の行は捨てていく
     """
 
     # sensor_values = (temperature, relative_humidity, pressure)
@@ -66,7 +66,9 @@ def save_sensor_values(sensor_values: tuple, recode_datetime: datetime.datetime,
         update_sensor_values_list = sensor_values_list[1:max_row]
 
     # 新しい行を末尾に追加
-    add_line_str = f"{recode_datetime.isoformat()},{temperature},{relative_humidity},{pressure}\n"
+    add_line_str = (
+        f"{recode_datetime.isoformat()},{temperature},{relative_humidity},{pressure}\n"
+    )
     update_sensor_values_list.append(add_line_str)
 
     # ファイルを保存
@@ -76,7 +78,7 @@ def save_sensor_values(sensor_values: tuple, recode_datetime: datetime.datetime,
 
 def latest_sensor_values(sensor_values: tuple, now_datetime: datetime.datetime):
     """現在のセンサー値を描写する。"""
-    
+
     # TODO:2020-11-24 ここは時間以外はオプション的な扱いにして、列ヘッダを見て設定できるととてもいい
     #    時間だけは絶対に必要にして、その列がない場合は例外を出して終了する
     latest_datetime = now_datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -107,8 +109,8 @@ def latest_sensor_values(sensor_values: tuple, now_datetime: datetime.datetime):
 def sensor_graphs():
     """過去に記録したセンサー情報の値をグラフにする"""
 
-    sensor_values_df = pandas.read_csv(SENSOR_VALUES_FILE, 
-        names=("datetime", "temperature", "pressure", "humidity")
+    sensor_values_df = pandas.read_csv(
+        SENSOR_VALUES_FILE, names=("datetime", "temperature", "pressure", "humidity")
     )
 
     fig1 = px.line(sensor_values_df, x="datetime", y="temperature", title="温度")
@@ -121,7 +123,7 @@ def sensor_graphs():
             dcc.Graph(id="pressure", figure=fig2),
             dcc.Graph(id="humidity", figure=fig3),
         ],
-        id="graphs"
+        id="graphs",
     )
 
 
@@ -137,46 +139,44 @@ def _layout():
             html.H2(app.title),
             html.Hr(),
             # 現在の値を取得
-            latest_sensor_values(sensor_values, now_dt_str ),
-            # 温度、湿度、気圧のグラフ（だけ）
-            sensor_graphs(), 
-
+            latest_sensor_values(sensor_values, now_dt_str),
+            # 温度、湿度、気圧のグラフ
+            sensor_graphs(),
             dcc.Interval(
                 id="interval-component",
-                interval=1 * 60 * 1000,  # in milliseconds
+                interval=UPDATE_MINITS * 60 * 1000,  # in milliseconds
                 n_intervals=0,
             ),
         ],
     )
+
 
 # TODO: 2021/10/07 この先の処理には課題があります。
 # スクリプトを起動している状態でないと値の記録が行えません。
 # BME280のセンサー情報を定量的に保存したい場合はセンサー記録用のスクリプトを用意すると良いでしょう。
 # 今回は機能紹介のために一つのスクリプトにまとめています。
 
-# センサーの値取得とコールバック
+# センサーの値取得と定期更新のコールバック
 @callback(
     [
         Output("latest_values", "children"),
         Output("graphs", "children"),
     ],
-    [
-        Input("interval-component", "n_intervals")
-    ],
+    [Input("interval-component", "n_intervals")],
 )
 def update_sensor_values(n):
 
     # 計測時の時間
-    now_dt_str: datetime.datetime = datetime.datetime.now().astimezone()
+    now_dt = datetime.datetime.now().astimezone()
 
     # センサーの情報を取得
     sensor_values = get_sensor_values()
 
     # 現在の値をCSVファイルへ保存
-    save_sensor_values(sensor_values, now_dt_str, 30)
+    save_sensor_values(sensor_values, now_dt, 30)
 
     # 現在値やグラフを更新
-    latest_values = latest_sensor_values(sensor_values, now_dt_str )
+    latest_values = latest_sensor_values(sensor_values, now_dt)
     graphs = sensor_graphs()
 
     return latest_values, graphs
