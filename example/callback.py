@@ -8,7 +8,7 @@ app = Dash(
 )
 app.title = "Hello Dash App"
 
-# TODO:2021-10-12 文字列を置き換えるようなcallbackにしておく
+# TODO:2021-10-12 文字列を置き換えるようなcallbackにしておく。ドロップダウンリストで行えるとわかりやすそう
 
 def _layout():
     """全体のレイアウト構成とインターバル設定を行う"""
