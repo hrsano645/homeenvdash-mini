@@ -8,6 +8,7 @@ app = Dash(
 )
 app.title = "Hello Dash App"
 
+# TODO:2021-10-12 文字列を置き換えるようなcallbackにしておく
 
 def _layout():
     """全体のレイアウト構成とインターバル設定を行う"""
@@ -15,14 +16,8 @@ def _layout():
     now_datetime = datetime.datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S")
     return html.Div(
         [
-            dcc.Location(id="url", refresh=False),
             html.H2(app.title),
             html.Label(f"Now Time: {now_datetime}"),
-            dcc.Interval(
-                id="interval-component",
-                interval=1 * 60 * 1000,  # ミリ秒
-                n_intervals=0,
-            ),
         ],
         id="update",
     )
@@ -34,8 +29,16 @@ def _layout():
     ],
     [Input("interval-component", "n_intervals")],
 )
-def update_sensor_values(run_intreval):
-    return run_intreval
+def update_sensor_values(update):
+    
+    now_datetime = datetime.datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S")
+    return html.Div(
+        [
+            html.H2(app.title),
+            html.Label(f"Now Time: {now_datetime}"),
+        ],
+        id="update",
+    )
 
 
 if __name__ == "__main__":

@@ -20,7 +20,6 @@ app = Dash(
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
 )
 app.title = "homeenvdash-mini"
-# app.config.suppress_callback_exceptions = True
 
 spi = board.SPI()
 bme_cs = digitalio.DigitalInOut(board.D5)
@@ -61,9 +60,9 @@ def save_sensor_values(
             sensor_values_list = sensor_values_file.readlines()
         update_sensor_values_list = sensor_values_list[:]
 
-    # Maxな行の場合、先頭を削る（Max-1の行
-    if len(sensor_values_list) >= max_row:
-        update_sensor_values_list = sensor_values_list[1:max_row]
+        # Maxな行の場合、先頭を削る（Max-1の行
+        if len(sensor_values_list) >= max_row:
+            update_sensor_values_list = sensor_values_list[1:max_row]
 
     # 新しい行を末尾に追加
     add_line_str = (
@@ -101,11 +100,6 @@ def latest_sensor_values(sensor_values: tuple, now_datetime: datetime.datetime):
     )
 
 
-# def generate_sensors_df():
-#     """グラフを描写するためのDataframeを用意する"""
-#     pass
-
-
 def sensor_graphs():
     """過去に記録したセンサー情報の値をグラフにする"""
 
@@ -130,16 +124,16 @@ def sensor_graphs():
 def _layout():
     """全体のレイアウト構成とインターバル設定を行う"""
 
-    now_dt_str = datetime.datetime.now().astimezone()
+    now_dt = datetime.datetime.now().astimezone()
     sensor_values = get_sensor_values()
+    save_sensor_values(sensor_values, now_dt, 30)
 
     return html.Div(
         [
-            dcc.Location(id="url", refresh=False),
             html.H2(app.title),
             html.Hr(),
             # 現在の値を取得
-            latest_sensor_values(sensor_values, now_dt_str),
+            latest_sensor_values(sensor_values, now_dt),
             # 温度、湿度、気圧のグラフ
             sensor_graphs(),
             dcc.Interval(
