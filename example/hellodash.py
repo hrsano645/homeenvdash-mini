@@ -1,4 +1,3 @@
-# homeenvdash mini
 from dash import Dash, callback, html, dcc, Input, Output
 
 # dashアプリの初期化
@@ -13,9 +12,8 @@ def _layout():
     """アプリの全体のレイアウト"""
     return html.Div(
         [
-            dcc.Location(id="url", refresh=False),
             html.H2(app.title),
-            html.Label("PythonのみでWEBアプリを作ります")
+            html.Label("PythonのみでWEBアプリを作ります"),
         ],
     )
 

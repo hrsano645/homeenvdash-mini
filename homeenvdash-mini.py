@@ -82,17 +82,17 @@ def latest_sensor_values(sensor_values: tuple, now_datetime: datetime.datetime):
     #    時間だけは絶対に必要にして、その列がない場合は例外を出して終了する
     latest_datetime = now_datetime.strftime("%Y-%m-%d %H:%M:%S")
     latest_temperature = sensor_values[0]
-    latest_pressure = sensor_values[1]
-    latest_humidity = sensor_values[2]
+    latest_humidity = sensor_values[1]
+    latest_pressure = sensor_values[2]
 
     return html.Div(
         [
             html.Label(f"更新時間 :{latest_datetime}"),
             html.Div(
                 [
-                    html.H6(f"気温: {latest_temperature}℃"),
-                    html.H6(f"湿度: {latest_pressure}%"),
-                    html.H6(f"気圧: {latest_humidity}hPa"),
+                    html.P(f"気温: {latest_temperature}℃"),
+                    html.P(f"湿度: {latest_humidity}%"),
+                    html.P(f"気圧: {latest_pressure}hPa"),
                 ],
             ),
         ],
@@ -104,18 +104,18 @@ def sensor_graphs():
     """過去に記録したセンサー情報の値をグラフにする"""
 
     sensor_values_df = pandas.read_csv(
-        SENSOR_VALUES_FILE, names=("datetime", "temperature", "pressure", "humidity")
+        SENSOR_VALUES_FILE, names=("datetime", "temperature", "humidity", "pressure")
     )
 
     fig1 = px.line(sensor_values_df, x="datetime", y="temperature", title="温度")
-    fig2 = px.line(sensor_values_df, x="datetime", y="pressure", title="気圧")
-    fig3 = px.line(sensor_values_df, x="datetime", y="humidity", title="湿度")
+    fig2 = px.line(sensor_values_df, x="datetime", y="humidity", title="湿度")
+    fig3 = px.line(sensor_values_df, x="datetime", y="pressure", title="気圧")
 
     return html.Div(
         [
             dcc.Graph(id="tempature", figure=fig1),
-            dcc.Graph(id="pressure", figure=fig2),
-            dcc.Graph(id="humidity", figure=fig3),
+            dcc.Graph(id="humidity", figure=fig2),
+            dcc.Graph(id="pressure", figure=fig3),
         ],
         id="graphs",
     )
@@ -126,7 +126,7 @@ def _layout():
 
     now_dt = datetime.datetime.now().astimezone()
     sensor_values = get_sensor_values()
-    save_sensor_values(sensor_values, now_dt, 30)
+    save_sensor_values(sensor_values, now_dt, 50)
 
     return html.Div(
         [
