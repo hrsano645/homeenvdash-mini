@@ -1,4 +1,3 @@
-import datetime
 from dash import Dash, callback, html, dcc, Input, Output
 
 # dashアプリの初期化
@@ -6,39 +5,31 @@ app = Dash(
     __name__,
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
 )
-app.title = "Hello Dash App"
+app.title = "Hello Dash Callback"
 
-# TODO:2021-10-12 文字列を置き換えるようなcallbackにしておく。ドロップダウンリストで行えるとわかりやすそう
 
 def _layout():
-    """全体のレイアウト構成とインターバル設定を行う"""
-
-    now_datetime = datetime.datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S")
     return html.Div(
         [
-            html.H2(app.title),
-            html.Label(f"Now Time: {now_datetime}"),
-        ],
-        id="update",
+            html.H1(app.title),
+            html.Hr(),
+            html.P("文字を入力すると、出力の部分が更新されます"),
+            html.Div(
+                [
+                    html.Span("入力: "),
+                    dcc.Input(id="input-form", value="Callbackを試しています", type="text"),
+                ]
+            ),
+            html.P(id="output-p", style={"background-color": "#ddd"}),
+        ]
     )
 
 
-@callback(
-    [
-        Output("update", "children"),
-    ],
-    [Input("interval-component", "n_intervals")],
-)
-def update_sensor_values(update):
-    
-    now_datetime = datetime.datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S")
-    return html.Div(
-        [
-            html.H2(app.title),
-            html.Label(f"Now Time: {now_datetime}"),
-        ],
-        id="update",
-    )
+@app.callback(Output("output-p", "children"), Input("input-form", "value"))
+def update_output_text(input_value):
+    # 引数がInputのvalueの値を取得
+    # return側に更新したいコンポーネントを指定する。childrenは指定コンポーネントの子要素の事
+    return f"出力: {input_value}"
 
 
 if __name__ == "__main__":
